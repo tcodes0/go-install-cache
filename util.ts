@@ -34,3 +34,23 @@ export function isError(x: unknown): x is Error {
   let e = x as Error
   return e.name !== undefined && e.message !== undefined
 }
+
+type ExecRes = {
+  stdout: string
+  stderr: string
+  code?: number
+}
+
+export const printOutput = (res: ExecRes): void => {
+  if (res.stdout) {
+    core.info(res.stdout)
+  }
+  if (res.stderr) {
+    core.info(res.stderr)
+  }
+}
+
+export function isExecRes(x: unknown): x is ExecRes {
+  let e = x as ExecRes
+  return e.stderr !== undefined && e.stdout !== undefined
+}

@@ -78920,6 +78920,89 @@ module.exports.implForWrapper = function (wrapper) {
 
 /***/ }),
 
+/***/ 633:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.post = exports.action = void 0;
+const core = __importStar(__nccwpck_require__(2186));
+const utils = __importStar(__nccwpck_require__(7380));
+const child_process_1 = __nccwpck_require__(2081);
+const util_1 = __nccwpck_require__(3837);
+const cache_1 = __nccwpck_require__(7604);
+const execShellCommand = (0, util_1.promisify)(child_process_1.exec);
+async function action() {
+    try {
+        const startedAt = Date.now();
+        let pkg = core.getInput("package");
+        await (0, cache_1.restoreCache)(pkg);
+        try {
+            let cmd = `go install ${pkg}`;
+            const res = await execShellCommand(cmd);
+            utils.printOutput(res);
+        }
+        catch (exc) {
+            if (!utils.isExecRes(exc)) {
+                throw exc;
+            }
+            utils.printOutput(exc);
+            if (exc.code) {
+                core.setFailed(`go-install-cache exit with code ${exc.code}`);
+            }
+        }
+        core.info(`Ran go-install-cache in ${Date.now() - startedAt}ms`);
+    }
+    catch (error) {
+        if (!utils.isError(error)) {
+            throw error;
+        }
+        core.error(`Failed to run: ${error}, ${error.stack}`);
+        core.setFailed(error.message);
+    }
+}
+exports.action = action;
+async function post() {
+    try {
+        await (0, cache_1.saveCache)();
+    }
+    catch (error) {
+        if (!utils.isError(error)) {
+            throw error;
+        }
+        core.error(`Failed to post-run: ${error}, ${error.stack}`);
+        core.setFailed(error.message);
+    }
+}
+exports.post = post;
+
+
+/***/ }),
+
 /***/ 7604:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -78958,18 +79041,16 @@ const core = __importStar(__nccwpck_require__(2186));
 const path_1 = __importDefault(__nccwpck_require__(1017));
 const constants_1 = __nccwpck_require__(7110);
 const util = __importStar(__nccwpck_require__(7380));
-const getCacheDir = () => {
-    return path_1.default.resolve(`${process.env.HOME}/.cache/go-install-cache`);
+const getCacheDirs = () => {
+    return [path_1.default.resolve(`${process.env.HOME}/go/pkg/mod`), path_1.default.resolve(`${process.env.HOME}/.cache/go-build`)];
 };
-async function buildCacheKeys() {
-    const keys = [];
-    let cacheKey = `go-install-cache.cache-${process.env?.RUNNER_OS}-`;
-    keys.push(cacheKey);
+async function buildCacheKeys(pkg) {
+    const keys = [`go-install-cache-${process.env?.RUNNER_OS}-${pkg}`];
     return keys;
 }
-async function restoreCache() {
+async function restoreCache(pkg) {
     const startedAt = Date.now();
-    const keys = await buildCacheKeys();
+    const keys = await buildCacheKeys(pkg);
     const primaryKey = keys.pop();
     const restoreKeys = keys.reverse();
     if (!primaryKey) {
@@ -78978,12 +79059,11 @@ async function restoreCache() {
     }
     core.saveState(constants_1.State.CachePrimaryKey, primaryKey);
     try {
-        const cacheKey = await cache.restoreCache([getCacheDir()], primaryKey, restoreKeys);
+        const cacheKey = await cache.restoreCache(getCacheDirs(), primaryKey, restoreKeys);
         if (!cacheKey) {
             core.info(`Cache not found for input keys: ${[primaryKey, ...restoreKeys].join(", ")}`);
             return;
         }
-        // Store the matched cache key
         util.setCacheState(cacheKey);
         core.info(`Restored cache for go-install-cache from key '${primaryKey}' in ${Date.now() - startedAt}ms`);
     }
@@ -79002,7 +79082,7 @@ async function restoreCache() {
 exports.restoreCache = restoreCache;
 async function saveCache() {
     const startedAt = Date.now();
-    const cacheDirs = [getCacheDir()];
+    const cacheDirs = getCacheDirs();
     const primaryKey = core.getState(constants_1.State.CachePrimaryKey);
     if (!primaryKey) {
         util.logWarning(`Error retrieving key from state.`);
@@ -79066,56 +79146,6 @@ exports.RefKey = "GITHUB_REF";
 
 /***/ }),
 
-/***/ 6932:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.postRun = void 0;
-const cache_1 = __nccwpck_require__(7604);
-const core = __importStar(__nccwpck_require__(2186));
-const utils = __importStar(__nccwpck_require__(7380));
-async function postRun() {
-    try {
-        await (0, cache_1.saveCache)();
-    }
-    catch (error) {
-        if (!utils.isError(error)) {
-            throw error;
-        }
-        core.error(`Failed to post-run: ${error}, ${error.stack}`);
-        core.setFailed(error.message);
-    }
-}
-exports.postRun = postRun;
-
-
-/***/ }),
-
 /***/ 7380:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -79145,7 +79175,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.isError = exports.logWarning = exports.getCacheState = exports.setCacheState = exports.isExactKeyMatch = void 0;
+exports.isExecRes = exports.printOutput = exports.isError = exports.logWarning = exports.getCacheState = exports.setCacheState = exports.isExactKeyMatch = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const constants_1 = __nccwpck_require__(7110);
 function isExactKeyMatch(key, cacheKey) {
@@ -79178,6 +79208,20 @@ function isError(x) {
     return e.name !== undefined && e.message !== undefined;
 }
 exports.isError = isError;
+const printOutput = (res) => {
+    if (res.stdout) {
+        core.info(res.stdout);
+    }
+    if (res.stderr) {
+        core.info(res.stderr);
+    }
+};
+exports.printOutput = printOutput;
+function isExecRes(x) {
+    let e = x;
+    return e.stderr !== undefined && e.stdout !== undefined;
+}
+exports.isExecRes = isExecRes;
 
 
 /***/ }),
@@ -83659,12 +83703,18 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 /******/ 	if (typeof __nccwpck_require__ !== 'undefined') __nccwpck_require__.ab = __dirname + "/";
 /******/ 	
 /************************************************************************/
-/******/ 	
-/******/ 	// startup
-/******/ 	// Load entry module and return exports
-/******/ 	// This entry module is referenced by other modules so it can't be inlined
-/******/ 	var __webpack_exports__ = __nccwpck_require__(6932);
-/******/ 	module.exports = __webpack_exports__;
-/******/ 	
+var __webpack_exports__ = {};
+// This entry need to be wrapped in an IIFE because it need to be in strict mode.
+(() => {
+"use strict";
+var exports = __webpack_exports__;
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const action_1 = __nccwpck_require__(633);
+(0, action_1.post)();
+
+})();
+
+module.exports = __webpack_exports__;
 /******/ })()
 ;

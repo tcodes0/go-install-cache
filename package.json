@@ -4,7 +4,8 @@
   "description": "Github action to install and cache a go package",
   "main": "dist/action.js",
   "scripts": {
-    "build": "rm -fr dist/* && tsc && ncc build -o dist/action action.ts && ncc build -o dist/post post.ts"
+    "build": "rm -fr dist/* && tsc && ncc build -o dist/action index.ts && ncc build -o dist/post post.ts",
+    "ci": "act -e event.json --container-architecture linux/amd64"
   },
   "repository": {
     "type": "git",
@@ -21,15 +22,12 @@
   "author": "github.com/tcodes0",
   "license": "MIT",
   "devDependencies": {
+    "prettier": "^3.2.5",
     "typescript": "^5.4.5"
   },
   "dependencies": {
     "@actions/cache": "^3.2.4",
     "@actions/core": "^1.10.1",
-    "@actions/exec": "^1.1.1",
-    "@actions/github": "^6.0.0",
-    "@actions/http-client": "^2.2.1",
-    "@actions/tool-cache": "^2.0.1",
     "@types/node": "^20.12.12",
     "@vercel/ncc": "^0.38.1"
   }
