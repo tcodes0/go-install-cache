@@ -6,20 +6,6 @@ import { saveCache } from "cache"
 
 const execShellCommand = promisify(exec)
 
-type ExecRes = {
-  stdout: string
-  stderr: string
-}
-
-const printOutput = (res: ExecRes): void => {
-  if (res.stdout) {
-    core.info(res.stdout)
-  }
-  if (res.stderr) {
-    core.info(res.stderr)
-  }
-}
-
 export async function action(): Promise<void> {
   try {
     const startedAt = Date.now()
@@ -29,18 +15,16 @@ export async function action(): Promise<void> {
       let cmd = `go install ${pkg}`
 
       const res = await execShellCommand(cmd)
-      printOutput(res)
+      utils.printOutput(res)
 
       core.info(`go-install-cache done`)
     } catch (exc) {
-      // @ts-ignore
-      printOutput(exc)
+      if (!utils.isExecRes(exc)) {
+        throw exc
+      }
 
-      // @ts-ignore
-      if (exc.code === 1) {
-        core.setFailed(`issues found`)
-      } else {
-        // @ts-ignore
+      utils.printOutput(exc)
+      if (exc.code) {
         core.setFailed(`go-install-cache exit with code ${exc.code}`)
       }
     }

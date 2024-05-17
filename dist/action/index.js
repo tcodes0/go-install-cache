@@ -78969,12 +78969,14 @@ async function action() {
         const startedAt = Date.now();
         try {
             let pkg = core.getInput("package");
-            let cmd = `go install ${pkg}`;
+            let cmd = `goff install ${pkg}`;
             const res = await execShellCommand(cmd);
             printOutput(res);
             core.info(`go-install-cache done`);
         }
         catch (exc) {
+            // @ts-ignore
+            console.dir(exc);
             // @ts-ignore
             printOutput(exc);
             // @ts-ignore
