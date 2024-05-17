@@ -78956,35 +78956,22 @@ const child_process_1 = __nccwpck_require__(2081);
 const util_1 = __nccwpck_require__(3837);
 const cache_1 = __nccwpck_require__(7604);
 const execShellCommand = (0, util_1.promisify)(child_process_1.exec);
-const printOutput = (res) => {
-    if (res.stdout) {
-        core.info(res.stdout);
-    }
-    if (res.stderr) {
-        core.info(res.stderr);
-    }
-};
 async function action() {
     try {
         const startedAt = Date.now();
+        await (0, cache_1.restoreCache)();
         try {
             let pkg = core.getInput("package");
-            let cmd = `goff install ${pkg}`;
+            let cmd = `go install ${pkg}`;
             const res = await execShellCommand(cmd);
-            printOutput(res);
-            core.info(`go-install-cache done`);
+            utils.printOutput(res);
         }
         catch (exc) {
-            // @ts-ignore
-            console.dir(exc);
-            // @ts-ignore
-            printOutput(exc);
-            // @ts-ignore
-            if (exc.code === 1) {
-                core.setFailed(`issues found`);
+            if (!utils.isExecRes(exc)) {
+                throw exc;
             }
-            else {
-                // @ts-ignore
+            utils.printOutput(exc);
+            if (exc.code) {
                 core.setFailed(`go-install-cache exit with code ${exc.code}`);
             }
         }
@@ -79055,7 +79042,7 @@ const path_1 = __importDefault(__nccwpck_require__(1017));
 const constants_1 = __nccwpck_require__(7110);
 const util = __importStar(__nccwpck_require__(7380));
 const getCacheDir = () => {
-    return path_1.default.resolve(`${process.env.HOME}/.cache/go-install-cache`);
+    return path_1.default.resolve(`${process.env.HOME}/go/pkg/mod`);
 };
 async function buildCacheKeys() {
     const keys = [];
@@ -79191,7 +79178,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.isError = exports.logWarning = exports.getCacheState = exports.setCacheState = exports.isExactKeyMatch = void 0;
+exports.isExecRes = exports.printOutput = exports.isError = exports.logWarning = exports.getCacheState = exports.setCacheState = exports.isExactKeyMatch = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const constants_1 = __nccwpck_require__(7110);
 function isExactKeyMatch(key, cacheKey) {
@@ -79224,6 +79211,20 @@ function isError(x) {
     return e.name !== undefined && e.message !== undefined;
 }
 exports.isError = isError;
+const printOutput = (res) => {
+    if (res.stdout) {
+        core.info(res.stdout);
+    }
+    if (res.stderr) {
+        core.info(res.stderr);
+    }
+};
+exports.printOutput = printOutput;
+function isExecRes(x) {
+    let e = x;
+    return e.stderr !== undefined && e.stdout !== undefined;
+}
+exports.isExecRes = isExecRes;
 
 
 /***/ }),

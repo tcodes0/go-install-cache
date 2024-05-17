@@ -2,22 +2,21 @@ import * as core from "@actions/core"
 import * as utils from "./util"
 import { exec } from "child_process"
 import { promisify } from "util"
-import { saveCache } from "cache"
+import { restoreCache, saveCache } from "cache"
 
 const execShellCommand = promisify(exec)
 
 export async function action(): Promise<void> {
   try {
     const startedAt = Date.now()
+    let pkg = core.getInput("package")
+    await restoreCache(pkg)
 
     try {
-      let pkg = core.getInput("package")
       let cmd = `go install ${pkg}`
 
       const res = await execShellCommand(cmd)
       utils.printOutput(res)
-
-      core.info(`go-install-cache done`)
     } catch (exc) {
       if (!utils.isExecRes(exc)) {
         throw exc
