@@ -35,7 +35,6 @@ export async function restoreCache(pkg: string): Promise<void> {
       return
     }
 
-    // Store the matched cache key
     util.setCacheState(cacheKey)
     core.info(`Restored cache for go-install-cache from key '${primaryKey}' in ${Date.now() - startedAt}ms`)
   } catch (error) {

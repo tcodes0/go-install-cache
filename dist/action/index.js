@@ -78959,9 +78959,9 @@ const execShellCommand = (0, util_1.promisify)(child_process_1.exec);
 async function action() {
     try {
         const startedAt = Date.now();
-        await (0, cache_1.restoreCache)();
+        let pkg = core.getInput("package");
+        await (0, cache_1.restoreCache)(pkg);
         try {
-            let pkg = core.getInput("package");
             let cmd = `go install ${pkg}`;
             const res = await execShellCommand(cmd);
             utils.printOutput(res);
@@ -79041,18 +79041,16 @@ const core = __importStar(__nccwpck_require__(2186));
 const path_1 = __importDefault(__nccwpck_require__(1017));
 const constants_1 = __nccwpck_require__(7110);
 const util = __importStar(__nccwpck_require__(7380));
-const getCacheDir = () => {
-    return path_1.default.resolve(`${process.env.HOME}/go/pkg/mod`);
+const getCacheDirs = () => {
+    return [path_1.default.resolve(`${process.env.HOME}/go/pkg/mod`), path_1.default.resolve(`${process.env.HOME}/.cache/go-build`)];
 };
-async function buildCacheKeys() {
-    const keys = [];
-    let cacheKey = `go-install-cache.cache-${process.env?.RUNNER_OS}-`;
-    keys.push(cacheKey);
+async function buildCacheKeys(pkg) {
+    const keys = [`go-install-cache-${process.env?.RUNNER_OS}-${pkg}`];
     return keys;
 }
-async function restoreCache() {
+async function restoreCache(pkg) {
     const startedAt = Date.now();
-    const keys = await buildCacheKeys();
+    const keys = await buildCacheKeys(pkg);
     const primaryKey = keys.pop();
     const restoreKeys = keys.reverse();
     if (!primaryKey) {
@@ -79061,12 +79059,11 @@ async function restoreCache() {
     }
     core.saveState(constants_1.State.CachePrimaryKey, primaryKey);
     try {
-        const cacheKey = await cache.restoreCache([getCacheDir()], primaryKey, restoreKeys);
+        const cacheKey = await cache.restoreCache(getCacheDirs(), primaryKey, restoreKeys);
         if (!cacheKey) {
             core.info(`Cache not found for input keys: ${[primaryKey, ...restoreKeys].join(", ")}`);
             return;
         }
-        // Store the matched cache key
         util.setCacheState(cacheKey);
         core.info(`Restored cache for go-install-cache from key '${primaryKey}' in ${Date.now() - startedAt}ms`);
     }
@@ -79085,7 +79082,7 @@ async function restoreCache() {
 exports.restoreCache = restoreCache;
 async function saveCache() {
     const startedAt = Date.now();
-    const cacheDirs = [getCacheDir()];
+    const cacheDirs = getCacheDirs();
     const primaryKey = core.getState(constants_1.State.CachePrimaryKey);
     if (!primaryKey) {
         util.logWarning(`Error retrieving key from state.`);
