@@ -1,0 +1,7 @@
+# vscode
+
+.vscode/launch.json
+
+# Project files
+.env
+node_modules
