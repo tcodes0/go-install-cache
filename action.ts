@@ -2,6 +2,7 @@ import * as core from "@actions/core"
 import * as utils from "./util"
 import { exec } from "child_process"
 import { promisify } from "util"
+import { saveCache } from "cache"
 
 const execShellCommand = promisify(exec)
 
@@ -19,7 +20,7 @@ const printOutput = (res: ExecRes): void => {
   }
 }
 
-export async function run(): Promise<void> {
+export async function action(): Promise<void> {
   try {
     const startedAt = Date.now()
 
@@ -51,6 +52,19 @@ export async function run(): Promise<void> {
     }
 
     core.error(`Failed to run: ${error}, ${error.stack}`)
+    core.setFailed(error.message)
+  }
+}
+
+export async function post(): Promise<void> {
+  try {
+    await saveCache()
+  } catch (error) {
+    if (!utils.isError(error)) {
+      throw error
+    }
+
+    core.error(`Failed to post-run: ${error}, ${error.stack}`)
     core.setFailed(error.message)
   }
 }

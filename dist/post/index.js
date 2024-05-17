@@ -78920,6 +78920,100 @@ module.exports.implForWrapper = function (wrapper) {
 
 /***/ }),
 
+/***/ 633:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.post = exports.action = void 0;
+const core = __importStar(__nccwpck_require__(2186));
+const utils = __importStar(__nccwpck_require__(7380));
+const child_process_1 = __nccwpck_require__(2081);
+const util_1 = __nccwpck_require__(3837);
+const cache_1 = __nccwpck_require__(7604);
+const execShellCommand = (0, util_1.promisify)(child_process_1.exec);
+const printOutput = (res) => {
+    if (res.stdout) {
+        core.info(res.stdout);
+    }
+    if (res.stderr) {
+        core.info(res.stderr);
+    }
+};
+async function action() {
+    try {
+        const startedAt = Date.now();
+        try {
+            let pkg = core.getInput("package");
+            let cmd = `go install ${pkg}`;
+            const res = await execShellCommand(cmd);
+            printOutput(res);
+            core.info(`go-install-cache done`);
+        }
+        catch (exc) {
+            // @ts-ignore
+            printOutput(exc);
+            // @ts-ignore
+            if (exc.code === 1) {
+                core.setFailed(`issues found`);
+            }
+            else {
+                // @ts-ignore
+                core.setFailed(`go-install-cache exit with code ${exc.code}`);
+            }
+        }
+        core.info(`Ran go-install-cache in ${Date.now() - startedAt}ms`);
+    }
+    catch (error) {
+        if (!utils.isError(error)) {
+            throw error;
+        }
+        core.error(`Failed to run: ${error}, ${error.stack}`);
+        core.setFailed(error.message);
+    }
+}
+exports.action = action;
+async function post() {
+    try {
+        await (0, cache_1.saveCache)();
+    }
+    catch (error) {
+        if (!utils.isError(error)) {
+            throw error;
+        }
+        core.error(`Failed to post-run: ${error}, ${error.stack}`);
+        core.setFailed(error.message);
+    }
+}
+exports.post = post;
+
+
+/***/ }),
+
 /***/ 7604:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -79062,57 +79156,6 @@ var Events;
     Events["PullRequest"] = "pull_request";
 })(Events || (exports.Events = Events = {}));
 exports.RefKey = "GITHUB_REF";
-
-
-/***/ }),
-
-/***/ 6932:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.postRun = void 0;
-const cache_1 = __nccwpck_require__(7604);
-const core = __importStar(__nccwpck_require__(2186));
-const utils = __importStar(__nccwpck_require__(7380));
-async function postRun() {
-    try {
-        core.info("post run");
-        await (0, cache_1.saveCache)();
-    }
-    catch (error) {
-        if (!utils.isError(error)) {
-            throw error;
-        }
-        core.error(`Failed to post-run: ${error}, ${error.stack}`);
-        core.setFailed(error.message);
-    }
-}
-exports.postRun = postRun;
 
 
 /***/ }),
@@ -83660,12 +83703,18 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 /******/ 	if (typeof __nccwpck_require__ !== 'undefined') __nccwpck_require__.ab = __dirname + "/";
 /******/ 	
 /************************************************************************/
-/******/ 	
-/******/ 	// startup
-/******/ 	// Load entry module and return exports
-/******/ 	// This entry module is referenced by other modules so it can't be inlined
-/******/ 	var __webpack_exports__ = __nccwpck_require__(6932);
-/******/ 	module.exports = __webpack_exports__;
-/******/ 	
+var __webpack_exports__ = {};
+// This entry need to be wrapped in an IIFE because it need to be in strict mode.
+(() => {
+"use strict";
+var exports = __webpack_exports__;
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const action_1 = __nccwpck_require__(633);
+(0, action_1.post)();
+
+})();
+
+module.exports = __webpack_exports__;
 /******/ })()
 ;
