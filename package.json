@@ -4,7 +4,8 @@
   "description": "Github action to install and cache a go package",
   "main": "dist/action.js",
   "scripts": {
-    "build": "rm -fr dist/* && tsc && ncc build -o dist/action action.ts && ncc build -o dist/post post.ts"
+    "build": "rm -fr dist/* && tsc && ncc build -o dist/action action.ts && ncc build -o dist/post post.ts",
+    "act": "act -e event.json --container-architecture linux/amd64"
   },
   "repository": {
     "type": "git",

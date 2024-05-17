@@ -1,0 +1,21 @@
+name: Main
+run-name: ${{ github.head_ref }}@${{ github.sha }}
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  changed-files:
+    name: Test install
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: install gotestfmt
+        uses: ./action.yml
+        with:
+          package: github.com/gotesttools/gotestfmt/v2/cmd/gotestfmt@latest
