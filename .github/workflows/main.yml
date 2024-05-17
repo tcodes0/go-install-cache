@@ -16,6 +16,6 @@ jobs:
         uses: actions/checkout@v4
 
       - name: install gotestfmt
-        uses: ./action.yml
+        uses: ./
         with:
           package: github.com/gotesttools/gotestfmt/v2/cmd/gotestfmt@latest
