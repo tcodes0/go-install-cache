@@ -79101,6 +79101,7 @@ const core = __importStar(__nccwpck_require__(2186));
 const utils = __importStar(__nccwpck_require__(7380));
 async function postRun() {
     try {
+        core.info("post run");
         await (0, cache_1.saveCache)();
     }
     catch (error) {

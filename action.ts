@@ -22,6 +22,7 @@ const printOutput = (res: ExecRes): void => {
 export async function run(): Promise<void> {
   try {
     const startedAt = Date.now()
+
     try {
       let pkg = core.getInput("package")
       let cmd = `go install ${pkg}`
